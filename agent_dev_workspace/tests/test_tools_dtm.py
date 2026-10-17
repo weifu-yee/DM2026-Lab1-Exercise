@@ -46,6 +46,41 @@ def test_build_dtm_tool_fixture():
     assert "count_vectorizer" in session.artifacts
 
 
+def test_build_dtm_tool_max_df_integer_regression():
+    """
+    Regression test: ensures invoking build_dtm_tool with max_df=1 (integer 1)
+    is treated as a float 1.0 (100% threshold) rather than an absolute count of 1 document.
+    When max_df=1.0, the resulting matrix has all 5 terms (Known Answer 4).
+    If max_df was treated as integer 1 document, terms appearing in >1 document (e.g. 'always', 'alpha')
+    would be stripped out.
+    """
+    session = SessionState()
+
+    premade_tools, _ = load_workspace_tools("premade_tools", session)
+    load_dataset_tool = next(t for t in premade_tools if t.name == "load_dataset_tool")
+    load_dataset_tool.invoke({
+        "file_path": "agent_dev/sample_fixture.csv",
+        "text_column": "text",
+        "label_column": "label"
+    })
+
+    dtm_tools = make_tools(session)
+    build_dtm_tool = next(t for t in dtm_tools if t.name == "build_dtm_tool")
+
+    # Invoke tool explicitly passing integer max_df=1
+    result = build_dtm_tool.invoke({
+        "ngram_range": [1, 1],
+        "min_df": 1,
+        "max_df": 1
+    })
+
+    # Must produce normal fixture DTM with 5 terms, not single-document terms only
+    assert result["n_documents"] == 8
+    assert result["n_terms"] == 5
+    assert result["non_zero"] == 21
+    assert session.feature_names == ["alpha", "always", "beta", "delta", "gamma"]
+
+
 def test_build_dtm_tool_invalid_ngram_range():
     session = SessionState()
 

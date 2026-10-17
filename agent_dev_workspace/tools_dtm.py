@@ -12,7 +12,7 @@ def make_tools(session):
     def build_dtm_tool(
         ngram_range: List[int] = [1, 1],
         min_df: Union[int, float] = 1,
-        max_df: Union[int, float] = 1.0,
+        max_df: float = 1.0,
     ) -> Dict[str, Any]:
         """
         Builds a Document-Term Matrix (DTM) using CountVectorizer from session.dataframe["text"].
@@ -20,7 +20,7 @@ def make_tools(session):
         Args:
             ngram_range: Lower and upper boundary of range of n-values for different n-grams. Default is [1, 1].
             min_df: Minimum document frequency threshold. Integer for document count, float for proportion. Default is 1.
-            max_df: Maximum document frequency threshold. Integer for document count, float for proportion. Default is 1.0.
+            max_df: Maximum document frequency cutoff as a proportion in (0, 1]. Terms appearing in more than this fraction of documents are ignored. Default is 1.0.
 
         Returns:
             Dict containing result_id, n_documents, n_terms, non_zero, total_elements, and sparsity_pct.
