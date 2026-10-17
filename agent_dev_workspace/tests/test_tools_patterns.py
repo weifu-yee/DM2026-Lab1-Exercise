@@ -76,6 +76,36 @@ def test_mine_patterns_topk_maxfpgrowth_ka20():
         assert res_max_b["patterns"] == []
 
 
+def test_mine_patterns_unicode_terms_regression():
+    """Regression test: verifies that Unicode non-ASCII terms like 'café' and 'naïve'
+    are successfully mined and mapped back without triggering Windows cp950 encoding errors in PAMI DF2DB.
+    """
+    session = SessionState()
+    unicode_df = pd.DataFrame([
+        {"text": "café naïve espresso café naïve", "label": "catUnicode", "category_name": "catUnicode"},
+        {"text": "café naïve latte café", "label": "catUnicode", "category_name": "catUnicode"},
+        {"text": "café espresso naïve", "label": "catUnicode", "category_name": "catUnicode"},
+    ])
+    session.dataframe = unicode_df
+
+    tools = make_tools(session)
+    mine_patterns_tool = next(t for t in tools if t.name == "mine_patterns_tool")
+
+    res = mine_patterns_tool.invoke({
+        "category_name": "catUnicode",
+        "filtering_method": "tfidf",
+        "algorithm": "fpgrowth",
+        "min_sup": 3
+    })
+
+    # 'café' and 'naïve' both appear in all 3 documents
+    mined_patterns = res["patterns"]
+    pattern_items = [item for p in mined_patterns for item in p["pattern"]]
+
+    assert "café" in pattern_items
+    assert "naïve" in pattern_items
+
+
 def test_mine_patterns_invalid_inputs():
     """Tests handling of invalid parameters and missing inputs."""
     session = _setup_session()

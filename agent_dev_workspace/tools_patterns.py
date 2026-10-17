@@ -172,10 +172,15 @@ def make_tools(session):
             )
             return summary
 
-        # Step 3: Build DataFrame of filtered binary indicators
+        # Step 3: Map kept terms to ASCII item IDs (item_0, item_1, ...) to avoid encoding mismatches
+        # in PAMI DF2DB's open() calls on Windows (default cp950/system encoding vs UTF-8 PAMI readers).
         filtered_terms = feature_names[kept_indices]
         filtered_counts = dense_dtm[:, kept_indices]
-        filtered_df = pd.DataFrame(filtered_counts, columns=filtered_terms)
+
+        ascii_columns = [f"item_{i}" for i in range(len(filtered_terms))]
+        item_id_to_term = dict(zip(ascii_columns, filtered_terms))
+
+        filtered_df = pd.DataFrame(filtered_counts, columns=ascii_columns)
 
         # Step 4: Convert to transactional database file via PAMI DF2DB
         temp_db_file = None
@@ -204,13 +209,14 @@ def make_tools(session):
                 miner.startMine()
                 pami_df = miner.getPatternsAsDataFrame()
 
-            # Parse mined patterns from PAMI DataFrame
+            # Parse mined patterns from PAMI DataFrame and map ASCII item IDs back to original terms
             if pami_df is not None and not pami_df.empty:
                 for _, row in pami_df.iterrows():
                     pattern_str = str(row["Patterns"]).strip()
                     support_val = int(row["Support"])
-                    items = [item.strip() for item in pattern_str.split() if item.strip()]
-                    patterns_list.append({"pattern": items, "support": support_val})
+                    raw_items = [item.strip() for item in pattern_str.split() if item.strip()]
+                    mapped_items = [item_id_to_term.get(item, item) for item in raw_items]
+                    patterns_list.append({"pattern": mapped_items, "support": support_val})
 
         finally:
             if temp_db_file and os.path.exists(temp_db_file):
