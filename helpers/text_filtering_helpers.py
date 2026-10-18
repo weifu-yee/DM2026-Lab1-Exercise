@@ -75,7 +75,7 @@ def save_filtered_terms(
     category_safe = category.replace(".", "_")
     os.makedirs(f"{output_dir}/filtered_terms", exist_ok=True)
 
-    with open(f"{output_dir}/filtered_terms/{category_safe}_kept_terms.txt", "w") as f:
+    with open(f"{output_dir}/filtered_terms/{category_safe}_kept_terms.txt", "w", encoding="utf-8") as f:
         f.write(f"{filter_type.upper()} Filtering - Terms Kept for {category}\n")
         f.write(f"Total: {len(words_to_keep)} terms\n")
         if upper_threshold:
@@ -91,7 +91,7 @@ def save_filtered_terms(
             f.write(f"{term:<40} {metric_series[term]:15.6f}\n")
 
     if len(words_removed_low) > 0:
-        with open(f"{output_dir}/filtered_terms/{category_safe}_removed_low.txt", "w") as f:
+        with open(f"{output_dir}/filtered_terms/{category_safe}_removed_low.txt", "w", encoding="utf-8") as f:
             f.write(f"{filter_type.upper()} Filtering - Terms Removed (Low) for {category}\n")
             f.write(f"Total: {len(words_removed_low)} terms\n")
             f.write(f"Threshold: {metric_name} < {lower_threshold:.6f}\n")
@@ -100,7 +100,7 @@ def save_filtered_terms(
                 f.write(f"{term}\n")
 
     if words_removed_high is not None and len(words_removed_high) > 0:
-        with open(f"{output_dir}/filtered_terms/{category_safe}_removed_high.txt", "w") as f:
+        with open(f"{output_dir}/filtered_terms/{category_safe}_removed_high.txt", "w", encoding="utf-8") as f:
             f.write(f"{filter_type.upper()} Filtering - Terms Removed (High) for {category}\n")
             f.write(f"Total: {len(words_removed_high)} terms\n")
             f.write(f"Threshold: {metric_name} > {upper_threshold:.6f}\n")
@@ -110,7 +110,7 @@ def save_filtered_terms(
 
 
 def _save_filtering_summary(output_dir, summary_lines, filter_name):
-    with open(f"{output_dir}/filtering_summary.txt", "w") as f:
+    with open(f"{output_dir}/filtering_summary.txt", "w", encoding="utf-8") as f:
         f.write(f"{filter_name} Filtering Summary\n" + "=" * 70 + "\n\n")
         f.write(f"{'Category':<30} {'Original':>10} {'Filtered':>10} {'Removed':>10}\n")
         f.write("=" * 70 + "\n")
